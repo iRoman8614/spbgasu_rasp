@@ -1,0 +1,21 @@
+.root {
+    display: grid;
+    grid-template-columns: 100px 50% 20% 30%;
+    border-bottom: 2px solid #aa3c24;
+    width: auto;
+    padding-top: 10px;
+    padding-bottom: 5px;
+    font-size: 16px;
+}
+
+.root:last-child {
+    border-bottom: none;
+}
+
+.container {
+    width: 110px;
+}
+
+.pair {
+    font-weight: bold;
+}
