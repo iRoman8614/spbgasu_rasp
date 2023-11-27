@@ -4,8 +4,12 @@
     border-bottom: 2px solid #aa3c24;
     width: auto;
     padding-top: 10px;
-    padding-bottom: 5px;
+    padding-bottom: 10px;
     font-size: 16px;
+}
+
+.root:first-child {
+    padding-top: 0;
 }
 
 .root:last-child {
