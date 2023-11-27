@@ -1,13 +1,14 @@
-import styles from '../pageStyles/Main.module.css';
-import mock from '../mock/days';
-import Day from '../components/Day/Day';
 import { useEffect, useState } from 'react';
+import Day from '../components/Day/Day';
 import groups from '../mock/groups';
+import mock from '../mock/days';
+
+import styles from '../pageStyles/Main.module.css';
 
 const Main = () => {
     const [page, setPage] = useState(1);
     const [type, setType] = useState(1);
-    const [group, setGroup] = useState('');
+    const [text, setText] = useState('');
     const [placeHolder, setPlaceHolder] = useState('Номер группы');
     const [filterText, setFilterText] = useState('');
 
@@ -19,12 +20,11 @@ const Main = () => {
         return item.toLowerCase().includes(filterText.toLowerCase());
     });
 
-    const updateGroupInUrl = (group) => {
+    const updateTextInUrl = (text) => {
         const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('group', group);
-        setGroup(group)
+        urlParams.set('text', text);
+        setFilterText(text)
         window.history.pushState({}, '', `?${urlParams}`);
-        console.log('Updated URL with group:', group);
     };
 
     const updatePageInUrl = (page) => {
@@ -32,7 +32,6 @@ const Main = () => {
         urlParams.set('page', page);
         setPage(page)
         window.history.pushState({}, '', `?${urlParams}`);
-        console.log('Updated URL with page:', page);
     };
 
     const updateTypeInUrl = (type) => {
@@ -40,34 +39,31 @@ const Main = () => {
         urlParams.set('type', type);
         setType(type)
         window.history.pushState({}, '', `?${urlParams}`);
-        console.log('Updated URL with type:', type);
     };
 
     const updateUrlParams = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const newPage = parseInt(urlParams.get('page')) || 1;
         const newType = parseInt(urlParams.get('type')) || 1;
-        const newGroup = urlParams.get('group') || '';
+        const newText = urlParams.get('text') || '';
 
         setPage(newPage);
         setType(newType);
-        setGroup(newGroup);
-        setFilterText(newGroup);
+        setText(newText);
+        setFilterText(newText);
     };
 
     useEffect(() => {
-        // Обновление URL с новыми параметрами
         if (!window.location.search) {
-            window.history.replaceState({}, '', '?page=1&type=1&group=');
+            window.history.replaceState({}, '', '?page=1&type=1&text=');
             updateUrlParams();
         } else {
             updateUrlParams();
         }
-    }, [page, type, group]);
+    }, [page, type, text]);
 
     //
     useEffect(() => {
-        // Обработка изменения истории браузера
         const handlePopState = () => {
             updateUrlParams();
         };
@@ -78,21 +74,11 @@ const Main = () => {
     }, []);
 
     useEffect(() => {
-        // Обновление value при изменении page или type
-        setFilterText('');
-    }, [page, type]);
-
-    useEffect(() => {
-        // Обновление значения type при загрузке страницы
         const urlParams = new URLSearchParams(window.location.search);
         const urlType = parseInt(urlParams.get('type')) || 1;
         setType(urlType);
-
         const isValidType = [1, 2, 3, 4].includes(urlType);
-
         setType(isValidType ? urlType : 1);
-
-        // Обновление значения placeholder в зависимости от параметра type в URL
         switch (urlType) {
             case 1:
                 setPlaceHolder('Номер группы');
@@ -102,10 +88,6 @@ const Main = () => {
                 break;
             case 3:
                 setPlaceHolder('ФИО');
-                break;
-            case 4:
-                setPlaceHolder('');
-                setFilterText(''); // Очищаем значение при выборе "структура"
                 break;
             default:
                 setPlaceHolder('');
@@ -150,7 +132,7 @@ const Main = () => {
                                         className={styles.button}
                                         key={ind}
                                         onClick={() => {
-                                            updateGroupInUrl(item); // Обновление параметра group в URL
+                                            updateTextInUrl(item);
                                         }}
                                     >
                                         {item}
