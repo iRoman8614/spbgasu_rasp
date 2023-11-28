@@ -25,19 +25,28 @@ const Main = () => {
         urlParams.set('text', text);
         setFilterText(text)
         window.history.pushState({}, '', `?${urlParams}`);
+
+        updateUrlParams();
     };
 
     const updatePageInUrl = (page) => {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('page', page);
-        setPage(page)
+        urlParams.set('type', 1); // Устанавливаем параметр type в 1 при обновлении параметра page
+        urlParams.set('text', ''); // Сбрасываем параметр text при обновлении параметра page
+        setPage(page);
+        setType(1); // Устанавливаем тип в 1 при обновлении параметра page
+        setFilterText(''); // Сбрасываем текст при обновлении параметра page
         window.history.pushState({}, '', `?${urlParams}`);
     };
 
     const updateTypeInUrl = (type) => {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('type', type);
-        setType(type)
+        // Сбрасываем параметр text при обновлении параметра type
+        urlParams.set('text', '');
+        setType(type);
+        setFilterText(''); // Сбрасываем текст при обновлении параметра type
         window.history.pushState({}, '', `?${urlParams}`);
     };
 
@@ -142,7 +151,7 @@ const Main = () => {
                     </div>
                 </div>
             }
-            {mock.map((item, ind) => {
+            {text !== '' && mock.map((item, ind) => {
                 return <Day day={item} key={ind} />;
             })}
         </div>
