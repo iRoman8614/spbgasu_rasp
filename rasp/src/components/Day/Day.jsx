@@ -1,4 +1,4 @@
-import styles from './Day.module.css'
+import styles from './Day.module.scss'
 import LessonLine from "../LessonLine/LessonLine";
 
 const Day = ({day}) => {

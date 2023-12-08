@@ -1,4 +1,4 @@
-import styles from './LessonLine.module.css'
+import styles from './LessonLine.module.scss'
 import mock from '../../mock/pairs'
 const LessonLine = ({content}) => {
     return(
@@ -10,8 +10,8 @@ const LessonLine = ({content}) => {
                 )}</div>
             </div>
             <div>{content?.title}</div>
-            <div>{content?.place}</div>
-            <div>{content?.teacher.join(', ')}</div>
+            <div className={styles.cell}>{content?.place}</div>
+            <div className={styles.cell}>{content?.teacher.join(', ')}</div>
         </div>
     )
 }

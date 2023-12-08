@@ -1,0 +1,43 @@
+.root {
+    display: flex;
+    border-bottom: 3px solid #aa3c24;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.root:last-child {
+    border-bottom: none;
+}
+
+.container {
+    width: 150px;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    color: #aa3c24;
+    font-weight: 700;
+    font-size: 20px;
+}
+
+.row {
+    width: 100%;
+}
+
+@media screen and (max-width: 700px) {
+    .root {
+        display: block;
+    }
+
+    .container{
+        width: max-content;
+        padding: 5px 5px 5px 10px;
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        text-align: left;
+        margin-bottom: 15px;
+        font-size: 16px;
+        background-color: #aa3c24;
+        color: #fff;
+    }
+}

@@ -1,0 +1,129 @@
+.root {
+    width: auto-clamp(360, 1920);
+}
+
+.navbar {
+    display: flex;
+    justify-content: left;
+    gap: 30px;
+    padding: 25px 15px;
+    width: 100%;
+    background: #aa3c24;
+    font-size: auto-clamp(20, 25);
+    font-weight: bold;
+}
+
+.link {
+    background: #aa3c24;
+    color: white;
+    text-decoration: none;
+    font-size: 20px;
+}
+
+.activeLink {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.container {
+    margin-right: 15px;
+    margin-left: 15px;
+}
+
+.type {
+    padding: auto-clamp(0, 16);
+    font-size: auto-clamp(16, 24);
+    cursor: pointer;
+    margin-bottom: auto-clamp(0, 20);
+}
+
+.activeType {
+    border-bottom: 2px solid #aa3c24;
+}
+
+.typebar {
+    padding: 15px 0;
+    display: flex;
+    gap: 32px;
+    font-size: 24px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+}
+
+.formBlock{
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.input{
+    width: 100%;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+}
+
+.buttonset {
+    margin: 30px 0;
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+}
+
+.button {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #6d7782;
+    cursor: pointer;
+    font-size: 13px;
+    color: #fff;
+    padding: 10px 10px;
+    min-width: 120px;
+    margin-right: 3px;
+    margin-bottom: 3px;
+    text-align: center;
+    border-radius: 30px;
+}
+
+.activeButton {
+    background-color: #aa3c24;
+}
+
+.options {
+    display: flex;
+    margin-bottom: 30px;
+}
+
+.weekBlock {
+    display: flex;
+    justify-content: space-between;
+}
+
+.weekSet {
+    display: flex;
+    margin-bottom: 30px;
+}
+
+.today {
+    text-align: right;
+}
+
+@media screen and (max-width: 700px) {
+    .navbar, .typebar {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .link, .type {
+        text-align: center;
+    }
+    .weekSet {
+        display: block;
+    }
+}
