@@ -36,24 +36,28 @@ const Main = () => {
     const[studyYear, setStudyYear] = useState('')
     const[level2, setLevel2] = useState([])
     const[level3, setLevel3] = useState([])
-    const[allData, setAllData] = useState(null);
-    const[searchData, setSearchData] =useState(null)
+    const[allData, setAllData] = useState({});
+    const[searchData, setSearchData] =useState({})
 
-    useEffect(() => {
+    //useEffect(() => {
+    const request = () => {
+        console.log('the first useEffect starts');
         const requestData = {
             token: "d0a47ed8f69a0844d71001d68fb71f1922be499989562c5b2f7b91e63c6d2293",
             action: "getData"
         };
-        const url = 'https://rasp.spbgasu.ru/api/v1/';
+        const url = '/api/v1/';
         axios.post(url, requestData)
             .then(response => {
                 setAllData(response.data);
+                console.log('response.data', response.data)
                 console.log('allData', allData)
             })
             .catch(error => {
                 console.error('Axios error:', error);
             });
-    }, []);
+    }
+    //}, []);
 
     useEffect(() => {
         let requestData;
@@ -74,11 +78,10 @@ const Main = () => {
                 "search":text
             };
         }
-        const url = 'https://rasp.spbgasu.ru/api/v1/';
+        const url = '/api/v1/';
         axios.post(url, requestData)
             .then(response => {
                 setSearchData(response.data);
-                console.log('searchData', searchData)
             })
             .catch(error => {
                 console.error('Axios error:', error);
@@ -96,19 +99,28 @@ const Main = () => {
         return keys;
     }
 
+    console.log('allData', allData)
     let data, structureLv1, structureLv2, structureLv3;
-    if (type === 'GROUP') {
-        data = allData.GROUPS[page];
-    } else if (type === 'PROFESSOR') {
-        data = allData.PROFESSORS;
-    } else if (type === 'AUDITORIUM') {
-        data = allData.AUDITORIUMS;
-    } else if (type === 'STRUCTURE') {
-        data = [];
-        structureLv1 = getKeysByLevel(allData.STRUCTURE[page], 1)
-        structureLv2 = getKeysByLevel(allData.STRUCTURE[page], 2)
-        structureLv3 = getKeysByLevel(allData.STRUCTURE[page], 3)
-    }
+
+    useEffect(() => {
+        request()
+        if (type === 'GROUP') {
+            console.log('groups', allData)
+            data = allData?.GROUPS && allData.GROUPS[page];
+            console.log('groups', data)
+        } else if (type === 'PROFESSOR') {
+            data = allData?.PROFESSORS;
+            console.log('PROFESSORS', data)
+        } else if (type === 'AUDITORIUM') {
+            data = allData?.AUDITORIUMS;
+            console.log('AUDITORIUMS', data)
+        } else if (type === 'STRUCTURE') {
+            data = [];
+            structureLv1 = getKeysByLevel(allData?.STRUCTURE[page], 1)
+            structureLv2 = getKeysByLevel(allData?.STRUCTURE[page], 2)
+            structureLv3 = getKeysByLevel(allData?.STRUCTURE[page], 3)
+        }
+    }, [type]);
 
     const facultetUpdate = (item) => {
         setFacultet(item);
@@ -151,13 +163,18 @@ const Main = () => {
         setFilterText(event.target.value);
     };
 
-    const filteredMock = data.filter((item) => {
-        if(type === 'STRUCTURE' && data !== undefined) {
-            return null
-        } else {
-            return item.toLowerCase().includes(filterText.toLowerCase());
-        }
-    });
+    let filteredMock;
+    useEffect(() => {
+        console.log('filteredMock', data)
+        filteredMock = data?.filter((item) => {
+            if(type === 'STRUCTURE' && data !== undefined) {
+                return null
+            } else {
+                return item.toLowerCase().includes(filterText.toLowerCase());
+            }
+        });
+        console.log('filteredMockMock', filteredMock)
+    }, [handleInputChange])
 
     const updateTextInUrl = (text) => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -204,6 +221,7 @@ const Main = () => {
             updateUrlParams();
         }
     }, [page, type, text]);
+
     useEffect(() => {
         const handlePopState = () => {
             updateUrlParams();
@@ -213,6 +231,7 @@ const Main = () => {
             window.removeEventListener('popstate', handlePopState);
         };
     }, []);
+
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const urlType = urlParams.get('type') || 'GROUP';
@@ -233,6 +252,7 @@ const Main = () => {
                 setPlaceHolder('');
         }
     }, [type]);
+
     const date = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = date.toLocaleDateString("ru-RU", options);
@@ -241,6 +261,7 @@ const Main = () => {
             setChosenWeek(num);
         }
     };
+
     return (
         <div className={styles.root}>
             <div className={styles.navbar}>
