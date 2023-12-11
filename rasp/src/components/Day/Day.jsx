@@ -1,22 +1,31 @@
-import styles from './Day.module.scss'
 import LessonLine from "../LessonLine/LessonLine";
 
-const Day = ({day}) => {
-    return(
+import styles from './Day.module.scss';
+
+const Day = ({ day, dayKey }) => {
+    const daySet = {
+        1: 'ПН',
+        2: 'ВТ',
+        3: 'СР',
+        4: 'ЧТ',
+        5: 'ПТ',
+        6: 'СБ',
+    }
+    const result = daySet[dayKey];
+
+    return (
         <div className={styles.root}>
             <div className={styles.container}>
-                <div>{day?.day}</div>
-                <div>{day?.data}</div>
+                <div>{result}</div>
+                <div>{day?.DATE}</div>
             </div>
             <div className={styles.row}>
-                {day?.lessons.map((item, ind) => {
-                    return(
-                        <LessonLine key={ind} content={item} />
-                    )
-                })}
+                {Object.values(day).map((lesson, ind) => (
+                    <LessonLine key={ind} content={lesson} />
+                ))}
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default Day;
