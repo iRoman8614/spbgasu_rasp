@@ -111,6 +111,19 @@
     margin-bottom: 30px;
 }
 
+.links {
+    display: flex;
+}
+
+.excel {
+    max-width: 100px;
+    color: #007bff;
+    text-decoration: none;
+    background-color: transparent;
+    text-align: center;
+    margin-right: auto-clamp(0, 20);
+}
+
 .today {
     text-align: right;
 }
@@ -123,7 +136,7 @@
     .link, .type {
         text-align: center;
     }
-    .weekSet {
+    .weekSet, .links {
         display: block;
     }
 }

@@ -1,11 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import Day from '../components/Day/Day';
-import groups from '../mock/groups';
-import mock from '../mock/days';
+import mock from '../mock/getData';
 import cn from 'classnames'
-
+import pairs from '../mock/search'
 import styles from '../pageStyles/Main.module.scss';
-
 function getCurrentWeekNumber(year, month, day) {
     const date = new Date(year, month - 1, day);
     const diff = date.getTime() - new Date(year, 0, 1).getTime();
@@ -22,12 +20,10 @@ const Main = () => {
     const month = new Date().getMonth() + 1;
     const day = new Date().getDate();
     const weekCounter = getCurrentWeekNumber(year, month, day);
-
     const startDate = new Date('2023-09-01');
     const currentWeekNumber1st = getCurrentWeekNumber1st(startDate);
-
-    const [page, setPage] = useState(1);
-    const [type, setType] = useState(1);
+    const [page, setPage] = useState('o'); //'o' || 'z'
+    const [type, setType] = useState('GROUP'); // 'GROUP' || 'PROFESSOR' || 'AUDITORIUM'
     const [text, setText] = useState('');
     const [option, setOption] = useState('R')
     const [chosenWeek, setChosenWeek] = useState(null)
@@ -35,19 +31,76 @@ const Main = () => {
     const [filterText, setFilterText] = useState('');
     const [sliceStart, setSliceStart] = useState(0)
     const [sliceEnd, setSliceEnd] = useState(6)
+    const[facultet, setFacultet] = useState('')
+    const[studyType, setStudyType] = useState('')
+    const[studyYear, setStudyYear] = useState('')
+    const[level2, setLevel2] = useState([])
+    const[level3, setLevel3] = useState([])
+    function getKeysByLevel(obj, targetLevel, currentLevel = 1) {
+        let keys = [];
+        for (let key in obj) {
+            if (typeof obj[key] === 'object') {
+                if (currentLevel === targetLevel) {keys.push(key)}
+                keys = keys.concat(getKeysByLevel(obj[key], targetLevel, currentLevel + 1).map(subKey => `${key}.${subKey}`));
+            }
+        }
+        return keys;
+    }
+    let data, structureLv1, structureLv2, structureLv3;
+    if (type === 'GROUP') {
+        data = mock.GROUPS[page];
+    } else if (type === 'PROFESSOR') {
+        data = mock.PROFESSORS;
+    } else if (type === 'AUDITORIUM') {
+        data = mock.AUDITORIUMS;
+    } else if (type === 'STRUCTURE') {
+        data = [];
+        structureLv1 = getKeysByLevel(mock.STRUCTURE[page], 1)
+        structureLv2 = getKeysByLevel(mock.STRUCTURE[page], 2)
+        structureLv3 = getKeysByLevel(mock.STRUCTURE[page], 3)
+    }
+    const facultetUpdate = (item) => {
+        setFacultet(item);
+        setStudyYear('');
+        setStudyType('');
+        updateTextInUrl('');
+    }
+    useEffect(() => {
+        if(facultet !== '') {
+            const filteredArray = structureLv2.filter(item => item.startsWith(facultet)).map(item => item.split('.')[1]);
+            setLevel2(filteredArray);
+            setLevel3([]);
+            setStudyYear('');
+            setStudyType('');
+        }
+    }, [facultet])
 
+    const studyTypeUpdate = (item) => {
+        setStudyType(item)
+    }
+    useEffect(() => {
+        if(facultet !== '' && studyType !== '') {
+            const filteredArray = structureLv3.filter(item => item.startsWith(`${facultet}.${studyType}`)).map(item => item.split('.').pop());
+            setLevel3(filteredArray)
+            setStudyYear('')
+        }
+    }, [studyType])
+    const studyYearUpdate = (item) => {
+        setStudyYear(item)
+    }
     useEffect(() => {
         setChosenWeek((weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? '2' : '1');
     }, [weekCounter, currentWeekNumber1st]);
-
     const handleInputChange = (event) => {
         setFilterText(event.target.value);
     };
-
-    const filteredMock = groups.filter((item) => {
-        return item.toLowerCase().includes(filterText.toLowerCase());
+    const filteredMock = data.filter((item) => {
+        if(type === 'STRUCTURE' && data !== undefined) {
+            return null
+        } else {
+            return item.toLowerCase().includes(filterText.toLowerCase());
+        }
     });
-
     const updateTextInUrl = (text) => {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('text', text);
@@ -55,46 +108,44 @@ const Main = () => {
         window.history.pushState({}, '', `?${urlParams}`);
         updateUrlParams();
     };
-
     const updatePageInUrl = (page) => {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('page', page);
-        urlParams.set('type', '1');
+        urlParams.set('type', 'GROUP');
         urlParams.set('text', '');
         setPage(page);
-        setType(1);
+        setType('GROUP');
         setFilterText('');
         window.history.pushState({}, '', `?${urlParams}`);
     };
-
     const updateTypeInUrl = (type) => {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('type', type);
         urlParams.set('text', '');
         setType(type);
         setFilterText('');
+        setFacultet('')
+        setStudyType('')
+        setStudyYear('')
         window.history.pushState({}, '', `?${urlParams}`);
     };
-
     const updateUrlParams = () => {
         const urlParams = new URLSearchParams(window.location.search);
-        const newPage = parseInt(urlParams.get('page')) || 1;
-        const newType = parseInt(urlParams.get('type')) || 1;
+        const newPage = urlParams.get('page') || 'o';
+        const newType = urlParams.get('type') || 'GROUP';
         const newText = urlParams.get('text') || '';
         setPage(newPage);
         setType(newType);
         setText(newText);
     };
-
     useEffect(() => {
         if (!window.location.search) {
-            window.history.replaceState({}, '', '?page=1&type=1&text=');
+            window.history.replaceState({}, '', '?page=o&type=GROUP&text=');
             updateUrlParams();
         } else {
             updateUrlParams();
         }
     }, [page, type, text]);
-
     useEffect(() => {
         const handlePopState = () => {
             updateUrlParams();
@@ -104,37 +155,33 @@ const Main = () => {
             window.removeEventListener('popstate', handlePopState);
         };
     }, []);
-
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
-        const urlType = parseInt(urlParams.get('type')) || 1;
+        const urlType = urlParams.get('type') || 'GROUP';
         setType(urlType);
-        const isValidType = [1, 2, 3, 4].includes(urlType);
-        setType(isValidType ? urlType : 1);
+        const isValidType = ['GROUP', 'PROFESSOR', 'AUDITORIUM', 'STRUCTURE'].includes(urlType);
+        setType(isValidType ? urlType : 'GROUP');
         switch (urlType) {
-            case 1:
+            case 'GROUP':
                 setPlaceHolder('Номер группы');
                 break;
-            case 2:
+            case 'AUDITORIUM':
                 setPlaceHolder('Номер аудитории');
                 break;
-            case 3:
+            case 'PROFESSOR':
                 setPlaceHolder('ФИО');
                 break;
             default:
                 setPlaceHolder('');
         }
     }, [type]);
-
     const changeWeek = (start, end) => {
         setSliceStart(start)
         setSliceEnd(end)
     }
-
     const date = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = date.toLocaleDateString("ru-RU", options);
-
     const handleClick = (num) => {
         if (num !== chosenWeek) {
             setChosenWeek(num);
@@ -145,22 +192,21 @@ const Main = () => {
             }
         }
     };
-
     return (
         <div className={styles.root}>
             <div className={styles.navbar}>
                 <div
                     className={cn(styles.link, {
-                        [styles.activeLink]: page === 1,
+                        [styles.activeLink]: page === 'o',
                     })}
-                    onClick={() => updatePageInUrl(1)}>
+                    onClick={() => updatePageInUrl('o')}>
                     Расписание ОФО
                 </div>
                 <div
                     className={cn(styles.link, {
-                        [styles.activeLink]: page === 2,
+                        [styles.activeLink]: page === 'z',
                     })}
-                    onClick={() => updatePageInUrl(2)}>
+                    onClick={() => updatePageInUrl('z')}>
                     Расписание ОЗФО и ЗФО
                 </div>
             </div>
@@ -168,26 +214,26 @@ const Main = () => {
                 <div className={styles.typebar}>
                     <div
                         className={cn(styles.type, {
-                            [styles.activeType]: type === 1,
+                            [styles.activeType]: type === 'GROUP',
                         })}
-                        onClick={() => updateTypeInUrl(1)}>Поиск</div>
+                        onClick={() => updateTypeInUrl('GROUP')}>Поиск</div>
                     <div
                         className={cn(styles.type, {
-                            [styles.activeType]: type === 2,
+                            [styles.activeType]: type === 'AUDITORIUM',
                         })}
-                        onClick={() => updateTypeInUrl(2)}>Аудитории</div>
+                        onClick={() => updateTypeInUrl('AUDITORIUM')}>Аудитории</div>
                     <div
                         className={cn(styles.type, {
-                            [styles.activeType]: type === 3,
+                            [styles.activeType]: type === 'PROFESSOR',
                         })}
-                        onClick={() => updateTypeInUrl(3)}>Преподаватели</div>
+                        onClick={() => updateTypeInUrl('PROFESSOR')}>Преподаватели</div>
                     <div
                         className={cn(styles.type, {
-                            [styles.activeType]: type === 4,
+                            [styles.activeType]: type === 'STRUCTURE',
                         })}
-                        onClick={() => updateTypeInUrl(4)}>Структура</div>
+                        onClick={() => updateTypeInUrl('STRUCTURE')}>Структура</div>
                 </div>
-                {type !== 4 &&
+                {type !== 'STRUCTURE' &&
                     <div>
                         <form className={styles.formBlock}>
                             <input
@@ -209,70 +255,138 @@ const Main = () => {
                                             key={ind}
                                             onClick={() => {
                                                 updateTextInUrl(item);
-                                            }}
-                                        >
+                                            }}>
                                             {item}
                                         </div>
                                     );
                                 })}
                         </div>
-                        {text !== '' &&
-                            <div className={styles.options}>
-                                <div
-                                    className={cn(styles.button, {
-                                        [styles.activeButton]: option === 'R',
-                                    })}
-                                    onClick={() => setOption('R')}>
-                                    Расписание
-                                </div>
-                                <div
-                                    className={cn(styles.button, {
-                                        [styles.activeButton]: option === 'S',
-                                    })}
-                                    onClick={() => setOption('S')}>
-                                    Сессия
-                                </div>
-                            </div>
-                        }
-                        {text !== '' && page === 1 &&
-                            <div className={styles.weekBlock}>
-                                <div className={styles.weekSet}>
-                                    <div
-                                        className={cn(styles.button, {
-                                            [styles.activeButton]: chosenWeek === '1',
-                                        })}
-                                        onClick={() => handleClick('1')}>
-                                        {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 1 && <a>Сегодня</a>} Числитель
-                                    </div>
-                                    <div
-                                        className={cn(styles.button, {
-                                            [styles.activeButton]: chosenWeek === '2',
-                                        })}
-                                        onClick={() => handleClick('2')}>
-                                        {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 && <a>Сегодня</a>} Знаменатель
-                                    </div>
-                                </div>
-                                <div className={styles.today}>
-                                    Сегодня:<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
-                                </div>
-                            </div>
-                        }
                     </div>
                 }
-                {page === 3 && <div>
-                    <p>Номер текущей недели с начала года: {weekCounter + 1}</p>
-                    <p>Номер недели в которую входит дата 1.09: {currentWeekNumber1st}</p>
-                    <p>номер текущей учебной недели {weekCounter + 1 - currentWeekNumber1st + 1}</p>
-                </div>}
-                {text !== '' && option === 'R' && mock.R.slice(sliceStart, sliceEnd).map((item, ind) => {
+                <div className={styles.buttonset}>
+                    {type === 'STRUCTURE' && structureLv1.map((item, ind) => {
+                        return (
+                            <div
+                                className={cn(styles.button, {
+                                    [styles.activeButton]: item === facultet ,
+                                })}
+                                key={ind}
+                                onClick={() => {
+                                    facultetUpdate(item);
+                                }}>
+                                {item}
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className={styles.buttonset}>
+                    {type === 'STRUCTURE' && facultet !== '' && level2 !== []  && level2.map((item, ind) => {
+                        return (
+                            <div
+                                className={cn(styles.button, {
+                                    [styles.activeButton]: item === studyType ,
+                                })}
+                                key={ind}
+                                onClick={() => {studyTypeUpdate(item)}}>
+                                {item}
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className={styles.buttonset}>
+                    {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && level3 !== []  && level3.map((item, ind) => {
+                        return (
+                            <div
+                                className={cn(styles.button, {
+                                    [styles.activeButton]: item === studyYear ,
+                                })}
+                                key={ind}
+                                onClick={() => {studyYearUpdate(item)}}>
+                                {`${item} курс`}
+                            </div>);})}
+                </div>
+                <div className={styles.buttonset}>
+                    {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && studyYear !== '' && mock.STRUCTURE[page][facultet][studyType][studyYear].map((item, ind) => {
+                        return (
+                            <div
+                                className={cn(styles.button, {
+                                    [styles.activeButton]: item === text ,
+                                })}
+                                key={ind}
+                                onClick={() => {updateTextInUrl(item)}}>
+                                {item}
+                            </div>
+                        );
+                    })}
+                </div>
+                {text !== '' &&
+                    <div className={styles.options}>
+                        <div
+                            className={cn(styles.button, {
+                                [styles.activeButton]: option === 'R',
+                            })}
+                            onClick={() => setOption('R')}>
+                            Расписание
+                        </div>
+                        <div
+                            className={cn(styles.button, {
+                                [styles.activeButton]: option === 'S',
+                            })}
+                            onClick={() => setOption('S')}>
+                            Сессия
+                        </div>
+                    </div>
+                }
+                {text !== '' && page === 'o' &&
+                    <div className={styles.weekBlock}>
+                        <div className={styles.weekSet}>
+                            <div
+                                className={cn(styles.button, {
+                                    [styles.activeButton]: chosenWeek === '1',
+                                })}
+                                onClick={() => handleClick('1')}>
+                                {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 1 && <a>Сегодня</a>} Числитель
+                            </div>
+                            <div
+                                className={cn(styles.button, {
+                                    [styles.activeButton]: chosenWeek === '2',
+                                })}
+                                onClick={() => handleClick('2')}>
+                                {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 && <a>Сегодня</a>} Знаменатель
+                            </div>
+                        </div>
+                        <div className={styles.links}>
+                            <div className={styles.excel}>
+                                <a href={`https://rasp.spbgasu.ru/getExcel.php?TYPE=GROUPS&FIND=${text}`}>Выгрузить в
+                                    Excel</a>
+                            </div>
+                            <div className={styles.today}>
+                                Сегодня:<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
+                            </div>
+                        </div>
+                    </div>
+                }
+                {text !== '' && page === 'z' &&
+                    <div className={styles.weekBlock}>
+                        <div className={styles.weekSet}></div>
+                        <div className={styles.links}>
+                            <div className={styles.excel}>
+                                <a href={`https://rasp.spbgasu.ru/getExcel.php?TYPE=GROUPS&FIND=${text}`}>Выгрузить в Excel</a>
+                            </div>
+                            <div className={styles.today}>
+                                Сегодня:<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
+                            </div>
+                        </div>
+                    </div>
+                }
+                {text !== '' && option === 'R' && pairs.R.slice(sliceStart, sliceEnd).map((item, ind) => {
                     return <Day day={item} key={ind} />;
                 })}
-                {text !== '' && option === 'S' && mock.S.map((item, ind) => {
+                {text !== '' && option === 'S' && pairs.S.map((item, ind) => {
                     return <Day day={item} key={ind} />;
                 })}
             </div>
         </div>
     );
 };
-
 export default Main;
