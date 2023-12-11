@@ -2,8 +2,6 @@ import React, {useEffect, useState} from 'react';
 import axios from 'axios'
 import cn from 'classnames'
 import Day from '../components/Day/Day';
-import mock from '../mock/getData';
-import pairs from '../mock/search'
 
 import styles from '../pageStyles/Main.module.scss';
 
@@ -26,15 +24,13 @@ const Main = () => {
     const startDate = new Date('2023-09-01');
     const currentWeekNumber1st = getCurrentWeekNumber1st(startDate);
 
-    const [page, setPage] = useState('o'); //'o' || 'z'
-    const [type, setType] = useState('GROUP'); // 'GROUP' || 'PROFESSOR' || 'AUDITORIUM'
-    const [text, setText] = useState('');
-    const [option, setOption] = useState('r')
-    const [chosenWeek, setChosenWeek] = useState(null)
-    const [placeHolder, setPlaceHolder] = useState('Номер группы');
-    const [filterText, setFilterText] = useState('');
-    const [sliceStart, setSliceStart] = useState(0)
-    const [sliceEnd, setSliceEnd] = useState(6)
+    const[page, setPage] = useState('o');
+    const[type, setType] = useState('GROUP');
+    const[text, setText] = useState('');
+    const[option, setOption] = useState('r')
+    const[chosenWeek, setChosenWeek] = useState(null)
+    const[placeHolder, setPlaceHolder] = useState('Номер группы');
+    const[filterText, setFilterText] = useState('');
     const[facultet, setFacultet] = useState('')
     const[studyType, setStudyType] = useState('')
     const[studyYear, setStudyYear] = useState('')
@@ -102,16 +98,16 @@ const Main = () => {
 
     let data, structureLv1, structureLv2, structureLv3;
     if (type === 'GROUP') {
-        data = mock.GROUPS[page];
+        data = allData.GROUPS[page];
     } else if (type === 'PROFESSOR') {
-        data = mock.PROFESSORS;
+        data = allData.PROFESSORS;
     } else if (type === 'AUDITORIUM') {
-        data = mock.AUDITORIUMS;
+        data = allData.AUDITORIUMS;
     } else if (type === 'STRUCTURE') {
         data = [];
-        structureLv1 = getKeysByLevel(mock.STRUCTURE[page], 1)
-        structureLv2 = getKeysByLevel(mock.STRUCTURE[page], 2)
-        structureLv3 = getKeysByLevel(mock.STRUCTURE[page], 3)
+        structureLv1 = getKeysByLevel(allData.STRUCTURE[page], 1)
+        structureLv2 = getKeysByLevel(allData.STRUCTURE[page], 2)
+        structureLv3 = getKeysByLevel(allData.STRUCTURE[page], 3)
     }
 
     const facultetUpdate = (item) => {
@@ -237,25 +233,14 @@ const Main = () => {
                 setPlaceHolder('');
         }
     }, [type]);
-    const changeWeek = (start, end) => {
-        setSliceStart(start)
-        setSliceEnd(end)
-    }
     const date = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = date.toLocaleDateString("ru-RU", options);
     const handleClick = (num) => {
         if (num !== chosenWeek) {
             setChosenWeek(num);
-            if (chosenWeek === '1') {
-                changeWeek(0, 6);
-            } else {
-                changeWeek(6, 12);
-            }
         }
     };
-    console.log('chosenWeek:', chosenWeek);
-    console.log('pairs.r[chosenWeek]:', pairs.r[chosenWeek]);
     return (
         <div className={styles.root}>
             <div className={styles.navbar}>
@@ -370,7 +355,7 @@ const Main = () => {
                             </div>);})}
                 </div>
                 <div className={styles.buttonset}>
-                    {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && studyYear !== '' && mock.STRUCTURE[page][facultet][studyType][studyYear].map((item, ind) => {
+                    {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && studyYear !== '' && allData.STRUCTURE[page][facultet][studyType][studyYear].map((item, ind) => {
                         return (
                             <div
                                 className={cn(styles.button, {
@@ -431,22 +416,22 @@ const Main = () => {
                     </div>
                 }
                 {page === 'o' && text !== '' && option === 'r' && chosenWeek !== null &&
-                    typeof pairs.r[chosenWeek] === 'object' &&
-                    Object.keys(pairs.r[chosenWeek]).map((dayKey, ind) => {
-                        const day = pairs.r[chosenWeek][dayKey];
+                    typeof searchData.r[chosenWeek] === 'object' &&
+                    Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
+                        const day = searchData.r[chosenWeek][dayKey];
                         return <Day day={day} dayKey={dayKey} key={ind} />;
                     })
                 }
-                {page === 'o' && text !== '' && option === 's' && Object.keys(pairs.s).map((weekKey) => (
-                    Object.keys(pairs.s[weekKey]).map((dayKey) => {
-                        const day = pairs.s[weekKey][dayKey];
+                {page === 'o' && text !== '' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
+                    Object.keys(searchData.s[weekKey]).map((dayKey) => {
+                        const day = searchData.s[weekKey][dayKey];
                         return <Day day={day} dayKey={dayKey} key={`${weekKey}-${dayKey}`} />;
                     })
                 ))}
                 {page === 'z' && text !== '' &&
                     <div className={styles.weekBlock}>
                         <div className={styles.weekSet}>
-                            {getKeysByLevel(pairs[option], 1).map((item, ind) => {
+                            {getKeysByLevel(searchData[option], 1).map((item, ind) => {
                                 return(
                                     <div className={cn(styles.button, {
                                         [styles.activeButton]: chosenWeek === item,
@@ -465,15 +450,15 @@ const Main = () => {
                     </div>
                 }
                 {page === 'z' && text !== '' && option === 'r' && chosenWeek !== null &&
-                    pairs.r[chosenWeek] && typeof pairs.r[chosenWeek] === 'object' &&
-                    Object.keys(pairs.r[chosenWeek]).map((dayKey, ind) => {
-                        const day = pairs.r[chosenWeek][dayKey];
+                    searchData.r[chosenWeek] && typeof searchData.r[chosenWeek] === 'object' &&
+                    Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
+                        const day = searchData.r[chosenWeek][dayKey];
                         return <Day day={day} dayKey={dayKey}  key={ind} />;
                     })
                 }
-                {page === 'z' && text !== '' && option === 's' && Object.keys(pairs.s).map((weekKey) => (
-                    Object.keys(pairs.s[weekKey]).map((dayKey) => {
-                        const day = pairs.s[weekKey][dayKey];
+                {page === 'z' && text !== '' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
+                    Object.keys(searchData.s[weekKey]).map((dayKey) => {
+                        const day = searchData.s[weekKey][dayKey];
                         return <Day day={day} dayKey={dayKey} key={`${weekKey}-${dayKey}`} />;
                     })
                 ))}
