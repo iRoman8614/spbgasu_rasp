@@ -2,7 +2,6 @@
     display: flex;
     border-bottom: 3px solid #aa3c24;
     padding-top: 10px;
-    padding-bottom: 10px;
 }
 
 .root:last-child {
@@ -17,6 +16,10 @@
     color: #aa3c24;
     font-weight: 700;
     font-size: 20px;
+
+    &:first-child{
+        padding-top: 10px;
+    }
 }
 
 .row {

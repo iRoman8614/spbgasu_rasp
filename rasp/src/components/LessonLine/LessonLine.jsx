@@ -14,45 +14,47 @@ const LessonLine = ({ content }) => {
     const pair = timeToPairMap[content?.TIME];
 
     return (
-        <div>
-            {content?.MODULE === undefined &&  <div className={styles.root}>
-                <div className={styles.container}>
-                    <div className={styles.pair}>{pair} пара</div>
-                    <div>
-                        <p>{content?.TIME}</p>
-                    </div>
-                </div>
-                <div>{content?.LESSON}</div>
-                <div className={styles.cell}>{content?.AUDITORIUM}</div>
-                <div className={styles.cell}>{content?.PROFESSOR}</div>
-            </div>}
-
-
-            {content?.MODULE === 1 && <div className={styles.moduleRoot}>
-                <div className={styles.container}>
-                    <div className={styles.pair}>{pair} пара</div>
-                    <div>
-                        <p>{content?.TIME}</p>
-                    </div>
-                </div>
-                <div className={styles.table}>
-                    <div>Модуль</div>
-                    {content?.LESSON.map((item, ind) => {
-                        return(
-                            <div className={styles.moduleContainer} key={ind}>
-                                <div>{item?.LESSON}</div>
-                                <div className={styles.cell}>{item?.AUDITORIUM}</div>
-                                <div className={styles.cell}>
-                                    <div className={styles.profs}>
-                                        <div>{item.KAF}</div>
-                                        <div>{item?.PROFESSOR}</div>
-                                    </div>
-                                </div>
+        <div className={styles.block}>
+                {content?.MODULE === undefined &&
+                    <div className={styles.root}>
+                        <div className={styles.container}>
+                            <div className={styles.pair}>{pair} пара</div>
+                            <div>
+                                <p>{content?.TIME}</p>
                             </div>
-                        )
-                    })}
-                </div>
-            </div>}
+                        </div>
+                        <div>{content?.LESSON}</div>
+                        <div className={styles.cell}>{content?.AUDITORIUM}</div>
+                        <div className={styles.cell}>{content?.PROFESSOR}</div>
+                    </div>
+                }
+                {content?.MODULE === 1 &&
+                    <div className={styles.moduleRoot}>
+                        <div className={styles.container}>
+                            <div className={styles.pair}>{pair} пара</div>
+                            <div>
+                                <p>{content?.TIME}</p>
+                            </div>
+                        </div>
+                        <div className={styles.table}>
+                            <div>Модуль</div>
+                            {content?.LESSON.map((item, ind) => {
+                                return(
+                                    <div className={styles.moduleContainer} key={ind}>
+                                        <div>{item?.LESSON}</div>
+                                        <div className={styles.cell}>{item?.AUDITORIUM}</div>
+                                        <div className={styles.cell}>
+                                            <div className={styles.profs}>
+                                                <div>{item.KAF}</div>
+                                                <div>{item?.PROFESSOR}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                }
         </div>
 
     );

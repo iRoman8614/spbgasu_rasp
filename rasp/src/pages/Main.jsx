@@ -24,11 +24,11 @@ const Main = () => {
     const startDate = new Date('2023-09-01');
     const currentWeekNumber1st = getCurrentWeekNumber1st(startDate);
 
-    const[page, setPage] = useState('o');
-    const[type, setType] = useState('GROUP');
-    const[text, setText] = useState('');
+    const[page, setPage] = useState();
+    const[type, setType] = useState();
+    const[text, setText] = useState();
     const[option, setOption] = useState('r')
-    const[chosenWeek, setChosenWeek] = useState(null)
+    const[chosenWeek, setChosenWeek] = useState('2')
     const[placeHolder, setPlaceHolder] = useState('Номер группы');
     const[filterText, setFilterText] = useState('');
     const[facultet, setFacultet] = useState('')
@@ -38,55 +38,146 @@ const Main = () => {
     const[level3, setLevel3] = useState([])
     const[allData, setAllData] = useState({});
     const[searchData, setSearchData] =useState({})
+    const[loading, setLoading] = useState(true)
+    const[filteredMock, setFilteredMock] = useState([])
+    const[data, setData] = useState()
+    const[structureLv1, setStructureLv1] = useState([])
+    const[structureLv2, setStructureLv2] = useState([])
+    const[structureLv3, setStructureLv3] = useState([])
+    const[found, setFound] = useState(false)
 
-    //useEffect(() => {
-    const request = () => {
-        console.log('the first useEffect starts');
+    const getData = async () => {
         const requestData = {
             token: "d0a47ed8f69a0844d71001d68fb71f1922be499989562c5b2f7b91e63c6d2293",
             action: "getData"
         };
         const url = '/api/v1/';
-        axios.post(url, requestData)
-            .then(response => {
-                setAllData(response.data);
-                console.log('response.data', response.data)
-                console.log('allData', allData)
-            })
-            .catch(error => {
-                console.error('Axios error:', error);
-            });
+        const res = await axios.post(url, requestData);
+        console.log('res.data', res.data);
+        setAllData(res.data);
+        setLoading(false);
+    };
+
+    if( loading ){
+        getData();
+        console.log("data");
     }
-    //}, []);
 
     useEffect(() => {
-        let requestData;
-        if(type === 'STRUCTURE') {
-            requestData = {
-                "token":"d0a47ed8f69a0844d71001d68fb71f1922be499989562c5b2f7b91e63c6d2293",
-                "action":"search",
-                "type": "GROUP",
-                "page": page,
-                "search":text
-            };
-        } else {
-            requestData = {
-                "token":"d0a47ed8f69a0844d71001d68fb71f1922be499989562c5b2f7b91e63c6d2293",
-                "action":"search",
-                "type": type,
-                "page": page,
-                "search":text
-            };
+        if (Object.keys(allData).length > 0){
+
+            console.log("loading0", loading);
+            updateUrlParams();
+            dataFilter();
+            console.log("loading1", loading);
         }
-        const url = '/api/v1/';
-        axios.post(url, requestData)
-            .then(response => {
-                setSearchData(response.data);
-            })
-            .catch(error => {
-                console.error('Axios error:', error);
-            });
-    }, [text]);
+    }, [allData]);
+
+    const updateUrlParams = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const newPage = urlParams.get('page') || 'o';
+        const newType = urlParams.get('type') || 'GROUP';
+        const newText = urlParams.get('text') || '';
+        setPage(newPage);
+        setType(newType);
+        setText(newText);
+        urlParams.set('page', newPage);
+        urlParams.set('type', newType);
+        urlParams.set('text', newText);
+        window.history.pushState({}, '', `?${urlParams}`);
+        console.log("upUrl");
+        console.log("loading2", loading);
+    };
+
+    const dataFilter = () => {
+        console.log("dataType", type);
+        if ( !loading ) {
+            if (type === 'GROUP') {
+                setData(allData?.GROUPS && allData.GROUPS[page]);
+            } else if (type === 'PROFESSOR') {
+                setData(allData?.PROFESSORS);
+            } else if (type === 'AUDITORIUM') {
+                setData(allData?.AUDITORIUMS);
+            } else if (type === 'STRUCTURE') {
+                setData([]);
+                setStructureLv1(getKeysByLevel(allData?.STRUCTURE[page], 1))
+                setStructureLv2(getKeysByLevel(allData?.STRUCTURE[page], 2))
+                setStructureLv3(getKeysByLevel(allData?.STRUCTURE[page], 3))
+            }
+            console.log('dataUse', data)
+        }
+    }
+
+
+
+
+    const handleSearch = (item) => {
+        updateTextInUrl(item)
+
+    }
+
+    useEffect(() => {
+        detailSearch()
+    }, [text])
+
+
+
+    useEffect(() => {
+        if (filterText.length >= 3 && type !== 'STRUCTURE' && data.length > 0) {
+            setFilteredMock(data.filter((item) => {
+                return item.toLowerCase().includes(filterText.toLowerCase());
+            }));
+        }
+    }, [filterText])
+
+    const detailSearch = async() => {
+        console.log('text', text)
+        if (typeof text !== 'undefined' && text !== '') {
+            let requestData;
+            if (type === 'STRUCTURE') {
+                requestData = {
+                    "token": "d0a47ed8f69a0844d71001d68fb71f1922be499989562c5b2f7b91e63c6d2293",
+                    "action": "search",
+                    "type": "GROUP",
+                    "page": page,
+                    "search": text
+                };
+            } else {
+                requestData = {
+                    "token": "d0a47ed8f69a0844d71001d68fb71f1922be499989562c5b2f7b91e63c6d2293",
+                    "action": "search",
+                    "type": type,
+                    "page": page,
+                    "search": text
+                };
+            }
+            const url = '/api/v1/';
+            axios.post(url, requestData)
+                .then(response => {
+                    setSearchData(response.data);
+                })
+                .catch(error => {
+                    console.error('Axios error:', error);
+                });
+        }
+    }
+
+
+
+
+
+
+
+    useEffect(() => {
+        console.log('searching ends');
+        if (Object.keys(searchData).length > 0){
+            setFound(true);
+            console.log('searchData', searchData)
+        } else {
+            console.log('found 0')
+            console.log('found', found)
+        }
+    }, [searchData]);
 
     function getKeysByLevel(obj, targetLevel, currentLevel = 1) {
         let keys = [];
@@ -99,28 +190,7 @@ const Main = () => {
         return keys;
     }
 
-    console.log('allData', allData)
-    let data, structureLv1, structureLv2, structureLv3;
 
-    useEffect(() => {
-        request()
-        if (type === 'GROUP') {
-            console.log('groups', allData)
-            data = allData?.GROUPS && allData.GROUPS[page];
-            console.log('groups', data)
-        } else if (type === 'PROFESSOR') {
-            data = allData?.PROFESSORS;
-            console.log('PROFESSORS', data)
-        } else if (type === 'AUDITORIUM') {
-            data = allData?.AUDITORIUMS;
-            console.log('AUDITORIUMS', data)
-        } else if (type === 'STRUCTURE') {
-            data = [];
-            structureLv1 = getKeysByLevel(allData?.STRUCTURE[page], 1)
-            structureLv2 = getKeysByLevel(allData?.STRUCTURE[page], 2)
-            structureLv3 = getKeysByLevel(allData?.STRUCTURE[page], 3)
-        }
-    }, [type]);
 
     const facultetUpdate = (item) => {
         setFacultet(item);
@@ -156,25 +226,19 @@ const Main = () => {
     }
 
     useEffect(() => {
-        setChosenWeek((weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? '2' : '3');
-    }, [weekCounter, currentWeekNumber1st]);
+        if(page === 'o') {
+            setChosenWeek((weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? '2' : '3');
+        } else if(page === 'z') {
+            setChosenWeek(weekCounter + 1)
+        }
+    }, [type]);
 
     const handleInputChange = (event) => {
         setFilterText(event.target.value);
+        console.log('filterText', filterText)
     };
 
-    let filteredMock;
-    useEffect(() => {
-        console.log('filteredMock', data)
-        filteredMock = data?.filter((item) => {
-            if(type === 'STRUCTURE' && data !== undefined) {
-                return null
-            } else {
-                return item.toLowerCase().includes(filterText.toLowerCase());
-            }
-        });
-        console.log('filteredMockMock', filteredMock)
-    }, [handleInputChange])
+
 
     const updateTextInUrl = (text) => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -183,6 +247,7 @@ const Main = () => {
         window.history.pushState({}, '', `?${urlParams}`);
         updateUrlParams();
     };
+
     const updatePageInUrl = (page) => {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('page', page);
@@ -193,6 +258,7 @@ const Main = () => {
         setFilterText('');
         window.history.pushState({}, '', `?${urlParams}`);
     };
+
     const updateTypeInUrl = (type) => {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('type', type);
@@ -204,41 +270,29 @@ const Main = () => {
         setStudyYear('')
         window.history.pushState({}, '', `?${urlParams}`);
     };
-    const updateUrlParams = () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const newPage = urlParams.get('page') || 'o';
-        const newType = urlParams.get('type') || 'GROUP';
-        const newText = urlParams.get('text') || '';
-        setPage(newPage);
-        setType(newType);
-        setText(newText);
-    };
-    useEffect(() => {
-        if (!window.location.search) {
-            window.history.replaceState({}, '', '?page=o&type=GROUP&text=');
-            updateUrlParams();
-        } else {
-            updateUrlParams();
-        }
-    }, [page, type, text]);
+
+    // useEffect(() => {
+    //     setFilteredMock([])
+    //     if (!window.location.search) {
+    //         window.history.replaceState({}, '', '?page=o&type=GROUP&text=');
+    //         updateUrlParams();
+    //     } else {
+    //         updateUrlParams();
+    //     }
+    // }, [loading, page, type, text]);
+
+    // useEffect(() => {
+    //     const handlePopState = () => {
+    //         updateUrlParams();
+    //     };
+    //     window.addEventListener('popstate', handlePopState);
+    //     return () => {
+    //         window.removeEventListener('popstate', handlePopState);
+    //     };
+    // }, [loading]);
 
     useEffect(() => {
-        const handlePopState = () => {
-            updateUrlParams();
-        };
-        window.addEventListener('popstate', handlePopState);
-        return () => {
-            window.removeEventListener('popstate', handlePopState);
-        };
-    }, []);
-
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlType = urlParams.get('type') || 'GROUP';
-        setType(urlType);
-        const isValidType = ['GROUP', 'PROFESSOR', 'AUDITORIUM', 'STRUCTURE'].includes(urlType);
-        setType(isValidType ? urlType : 'GROUP');
-        switch (urlType) {
+        switch (type) {
             case 'GROUP':
                 setPlaceHolder('Номер группы');
                 break;
@@ -256,6 +310,7 @@ const Main = () => {
     const date = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = date.toLocaleDateString("ru-RU", options);
+
     const handleClick = (num) => {
         if (num !== chosenWeek) {
             setChosenWeek(num);
@@ -324,7 +379,7 @@ const Main = () => {
                                             })}
                                             key={ind}
                                             onClick={() => {
-                                                updateTextInUrl(item);
+                                                handleSearch(item);
                                             }}>
                                             {item}
                                         </div>
@@ -376,38 +431,38 @@ const Main = () => {
                             </div>);})}
                 </div>
                 <div className={styles.buttonset}>
-                    {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && studyYear !== '' && allData.STRUCTURE[page][facultet][studyType][studyYear].map((item, ind) => {
+                    {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && studyYear !== '' && allData?.STRUCTURE[page][facultet][studyType][studyYear].map((item, ind) => {
                         return (
                             <div
                                 className={cn(styles.button, {
                                     [styles.activeButton]: item === text ,
                                 })}
                                 key={ind}
-                                onClick={() => {updateTextInUrl(item)}}>
+                                onClick={() => {handleSearch(item)}}>
                                 {item}
                             </div>
                         );
                     })}
                 </div>
-                {text !== '' &&
+                {found === true  !== '' &&
                     <div className={styles.options}>
-                        <div
+                        {searchData.r && <div
                             className={cn(styles.button, {
                                 [styles.activeButton]: option === 'r',
                             })}
                             onClick={() => setOption('r')}>
                             Расписание
-                        </div>
-                        <div
+                        </div>}
+                        {searchData.s && <div
                             className={cn(styles.button, {
                                 [styles.activeButton]: option === 's',
                             })}
                             onClick={() => setOption('s')}>
                             Сессия
-                        </div>
+                        </div>}
                     </div>
                 }
-                {text !== '' && page === 'o' && option !== 's' &&
+                {found === true  !== '' && page === 'o' && option !== 's' &&
                     <div className={styles.weekBlock}>
                         <div className={styles.weekSet}>
                             <div
@@ -436,20 +491,20 @@ const Main = () => {
                         </div>
                     </div>
                 }
-                {page === 'o' && text !== '' && option === 'r' && chosenWeek !== null &&
+                {found === true && page === 'o' && text !== '' && option === 'r' && chosenWeek !== null &&
                     typeof searchData.r[chosenWeek] === 'object' &&
                     Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
                         const day = searchData.r[chosenWeek][dayKey];
                         return <Day day={day} dayKey={dayKey} key={ind} />;
                     })
                 }
-                {page === 'o' && text !== '' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
+                {found === true && page === 'o' && text !== '' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
                     Object.keys(searchData.s[weekKey]).map((dayKey) => {
                         const day = searchData.s[weekKey][dayKey];
                         return <Day day={day} dayKey={dayKey} key={`${weekKey}-${dayKey}`} />;
                     })
                 ))}
-                {page === 'z' && text !== '' &&
+                {found === true && page === 'z' && text !== '' &&
                     <div className={styles.weekBlock}>
                         <div className={styles.weekSet}>
                             {getKeysByLevel(searchData[option], 1).map((item, ind) => {
@@ -470,14 +525,14 @@ const Main = () => {
                         </div>
                     </div>
                 }
-                {page === 'z' && text !== '' && option === 'r' && chosenWeek !== null &&
+                {found === true && page === 'z' && text !== '' && option === 'r' && chosenWeek !== null &&
                     searchData.r[chosenWeek] && typeof searchData.r[chosenWeek] === 'object' &&
                     Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
                         const day = searchData.r[chosenWeek][dayKey];
                         return <Day day={day} dayKey={dayKey}  key={ind} />;
                     })
                 }
-                {page === 'z' && text !== '' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
+                {found === true && page === 'z' && text !== '' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
                     Object.keys(searchData.s[weekKey]).map((dayKey) => {
                         const day = searchData.s[weekKey][dayKey];
                         return <Day day={day} dayKey={dayKey} key={`${weekKey}-${dayKey}`} />;
