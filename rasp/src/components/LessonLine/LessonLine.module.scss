@@ -53,8 +53,8 @@
 
 @media screen and (max-width: 700px) {
     .root {
-        grid-template-rows: 40% 60%;
-        grid-template-columns: 60% 20% 20%;
+        grid-template-rows: 40px 100px;
+        grid-template-columns: 48% 10% 40%;
     }
     .container {
         grid-column-start: 1;

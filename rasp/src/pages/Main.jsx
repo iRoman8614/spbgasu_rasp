@@ -77,7 +77,6 @@ const Main = () => {
     const clearDetail = () => {
         setSearchData({});
         setFound(false);
-        console.log('cleared');
     }
     //обновление url параметров, если их нет то подсавь стандартные, если есть то проверь новые со старыми, если разные то обнови их
     const updateUrlParams = () => {
@@ -85,6 +84,7 @@ const Main = () => {
         const newPage = urlParams.get('page') || 'o';
         const newType = urlParams.get('type') || 'GROUP';
         const newText = urlParams.get('text') || '';
+        setFilterText('')
         if(newPage !== page) {
             setPage(newPage);
             urlParams.set('page', newPage);
@@ -99,6 +99,9 @@ const Main = () => {
             setText(newText);
             urlParams.set('text', newText);
             clearDetail();
+        }
+        if(newText !== '' && typeof newText !== 'undefined') {
+            setFilterText(newText)
         }
         window.history.pushState({}, '', `?${urlParams}`);
     };
@@ -189,26 +192,58 @@ const Main = () => {
     useEffect(() => {detailSearch()}, [text, strText])
     //отслеживание состояния загрузки детального запроса
     useEffect(() => {
-        if (Object.keys(searchData).length > 0){
-            if(page === 'o') {
-                setChosenWeek('2')
-            } else if(page === 'z') {
-                if(Object.keys(searchData).length < 2) {
-                    setOption(Object.keys(searchData)[0])
-                    const nestedKeys = Object.keys(searchData[option]);
-                    if (nestedKeys.length > 0) {
-                        const firstNestedKey = nestedKeys[0];
-                        setChosenWeek(firstNestedKey);
-                    }
-                } else {
-                    const nestedKeys = Object.keys(searchData[option]);
-                    if (nestedKeys.length > 0) {
-                        const firstNestedKey = nestedKeys[0];
-                        setChosenWeek(firstNestedKey);
+        if (Object.keys(searchData).length > 0) {
+            if (page === 'o') {
+                if (Object.keys(searchData).length < 2) {
+                    if (Object.keys(searchData)[0] === 'r') {
+                        setOption('r')
+                        if((weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 1) {
+                            setChosenWeek('2')
+                        } else {
+                            setChosenWeek('3')
+                        }
+                    } else if (Object.keys(searchData)[0] === 's') {
+                        setOption('s')
+                        const nestedKeys = Object.keys(searchData.s);
+                        if (nestedKeys.length > 0) {
+                            const firstNestedKey = nestedKeys[0];
+                            setChosenWeek(firstNestedKey);
+                        } else {
+                            const nestedKeys = Object.keys(searchData[option]);
+                            if (nestedKeys.length > 0) {
+                                const firstNestedKey = nestedKeys[0];
+                                setChosenWeek(firstNestedKey);
+                            }
+                        }
                     }
                 }
+                setFound(true);
+            } else if (page === 'z') {
+                if (Object.keys(searchData).length < 2) {
+                    if (Object.keys(searchData)[0] === 'r') {
+                        setOption('r')
+                        const nestedKeys = Object.keys(searchData.r);
+                        if (nestedKeys.length > 0) {
+                            const firstNestedKey = nestedKeys[0];
+                            setChosenWeek(firstNestedKey);
+                        }
+                    } else if (Object.keys(searchData)[0] === 's') {
+                        setOption('s')
+                        const nestedKeys = Object.keys(searchData.s);
+                        if (nestedKeys.length > 0) {
+                            const firstNestedKey = nestedKeys[0];
+                            setChosenWeek(firstNestedKey);
+                        } else {
+                            const nestedKeys = Object.keys(searchData[option]);
+                            if (nestedKeys.length > 0) {
+                                const firstNestedKey = nestedKeys[0];
+                                setChosenWeek(firstNestedKey);
+                            }
+                        }
+                    }
+                }
+                setFound(true);
             }
-            setFound(true);
         }
     }, [searchData, found, page, option]);
     //получение ключей с определенного уровня вложенности
@@ -256,6 +291,7 @@ const Main = () => {
         urlParams.set('facultet', '');
         urlParams.set('studyType', '');
         urlParams.set('studyYear', '');
+        urlParams.set('strText', '');
         window.history.pushState({}, '', `?${urlParams}`);
         updateUrlParams();
         updateUrlStructure();
@@ -264,7 +300,11 @@ const Main = () => {
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set('type', type);
         urlParams.set('text', '');
-        setFilterText('');
+        urlParams.set('facultet', '');
+        urlParams.set('studyType', '');
+        urlParams.set('studyYear', '');
+        urlParams.set('strText', '');
+        setData([])
         window.history.pushState({}, '', `?${urlParams}`);
         updateUrlParams();
     };
@@ -522,7 +562,7 @@ const Main = () => {
                         </div>
                     </div>
                 }
-                {found === true && typeof text !== 'undefined' && text !== '' && typeof strText !== 'undefined' && strText !== '' && page === 'o' && option !== 's' &&
+                {found === true && typeof text !== 'undefined' && text !== '' && typeof strText !== 'undefined' && strText !== '' && page === 'o' &&
                     <div className={styles.weekBlock}>
                         <div className={styles.weekSet}>
                             <div
@@ -542,15 +582,14 @@ const Main = () => {
                         </div>
                         <div className={styles.links}>
                             <div className={styles.today}>
-                                Сегодня: {(weekCounter + 1)}<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
+                                Сегодня:<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
                             </div>
                         </div>
                     </div>
                 } {found === true && Object.keys(searchData).length > 0 && page === 'o' && option === 'r' && chosenWeek !== null &&
-                    typeof searchData.r[chosenWeek] === 'object' &&
+                    searchData.r[chosenWeek] && typeof searchData.r[chosenWeek] === 'object' &&
                     Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
                         const day = searchData.r[chosenWeek][dayKey];
-                        console.log(day, dayKey, ind)
                         return <Day day={day} dayKey={dayKey} key={ind} />;
                     })
                 } {found === true && Object.keys(searchData).length > 0 && page === 'o' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
@@ -558,7 +597,7 @@ const Main = () => {
                         const day = searchData.s[weekKey][dayKey];
                         return <Day day={day} dayKey={dayKey} key={`${weekKey}-${dayKey}`} />;
                     })
-                ))} {found === true && page === 'z' && text !== '' && typeof text !== 'undefined' &&
+                ))}{found === true && page === 'z' && text !== '' && typeof text !== 'undefined' &&
                     <div className={styles.weekBlock}>
                         <div className={styles.weekSet}>
                             {getKeysByLevel(searchData[option], 1).map((item, ind) => {
@@ -571,7 +610,7 @@ const Main = () => {
                         </div>
                         <div className={styles.links}>
                             <div className={styles.today}>
-                                Сегодня:  {(weekCounter + 1)}<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
+                                Сегодня:<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
                             </div>
                         </div>
                     </div>
