@@ -23,29 +23,42 @@ const Main = () => {
     const weekCounter = getCurrentWeekNumber(year, month, day);
     const startDate = new Date('2023-09-01');
     const currentWeekNumber1st = getCurrentWeekNumber1st(startDate);
-
+    //url параметры
     const[page, setPage] = useState();
     const[type, setType] = useState();
     const[text, setText] = useState();
-    const[option, setOption] = useState('r')
-    const[chosenWeek, setChosenWeek] = useState('2')
+    //переключатель расписание или сессии
+    const[option, setOption] = useState('r');
+    //переключение недели
+    const[chosenWeek, setChosenWeek] = useState('2');
+    //плейсхолдер в инпуте
     const[placeHolder, setPlaceHolder] = useState('Номер группы');
+    //текст по которому фольтруется
     const[filterText, setFilterText] = useState('');
-    const[facultet, setFacultet] = useState('')
-    const[studyType, setStudyType] = useState('')
-    const[studyYear, setStudyYear] = useState('')
-    const[level2, setLevel2] = useState([])
-    const[level3, setLevel3] = useState([])
+    //параметры структуры
+    const[facultet, setFacultet] = useState('');
+    const[studyType, setStudyType] = useState('');
+    const[studyYear, setStudyYear] = useState('');
+    const[strText, setStrText] = useState('');
+    //вложенные массивы в структуре
+    const[level2, setLevel2] = useState([]);
+    const[level3, setLevel3] = useState([]);
+    const[structureLv1, setStructureLv1] = useState([]);
+    const[structureLv2, setStructureLv2] = useState([]);
+    const[structureLv3, setStructureLv3] = useState([]);
+    //получение массива структур
     const[allData, setAllData] = useState({});
-    const[searchData, setSearchData] =useState({})
-    const[loading, setLoading] = useState(true)
-    const[filteredMock, setFilteredMock] = useState([])
-    const[data, setData] = useState()
-    const[structureLv1, setStructureLv1] = useState([])
-    const[structureLv2, setStructureLv2] = useState([])
-    const[structureLv3, setStructureLv3] = useState([])
-    const[found, setFound] = useState(false)
-
+    //получение конкретного расписания
+    const[searchData, setSearchData] =useState({});
+    //состояние загрузки запроса всех структур
+    const[loading, setLoading] = useState(true);
+    //вложенный подмассив структуры
+    const[data, setData] = useState([]);
+    //массив отфильтрованных данных
+    const[filteredMock, setFilteredMock] = useState([]);
+    //загрузка по детальному поиску
+    const[found, setFound] = useState(false);
+    //запрос на получение всей структуры
     const getData = async () => {
         const requestData = {
             token: "d0a47ed8f69a0844d71001d68fb71f1922be499989562c5b2f7b91e63c6d2293",
@@ -53,75 +66,87 @@ const Main = () => {
         };
         const url = '/api/v1/';
         const res = await axios.post(url, requestData);
-        console.log('res.data', res.data);
         setAllData(res.data);
         setLoading(false);
     };
-
+    //пока загрузка сделай запрос на получние всей структуры
     if( loading ){
         getData();
-        console.log("data");
     }
-
-    useEffect(() => {
-        if (Object.keys(allData).length > 0){
-
-            console.log("loading0", loading);
-            updateUrlParams();
-            dataFilter();
-            console.log("loading1", loading);
-        }
-    }, [allData]);
-
+    //очистка детального запроса
+    const clearDetail = () => {
+        setSearchData({});
+        setFound(false);
+        console.log('cleared');
+    }
+    //обновление url параметров, если их нет то подсавь стандартные, если есть то проверь новые со старыми, если разные то обнови их
     const updateUrlParams = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const newPage = urlParams.get('page') || 'o';
         const newType = urlParams.get('type') || 'GROUP';
         const newText = urlParams.get('text') || '';
-        setPage(newPage);
-        setType(newType);
-        setText(newText);
-        urlParams.set('page', newPage);
-        urlParams.set('type', newType);
-        urlParams.set('text', newText);
+        if(newPage !== page) {
+            setPage(newPage);
+            urlParams.set('page', newPage);
+            clearDetail();
+        }
+        if(newType !== type) {
+            setType(newType);
+            urlParams.set('type', newType);
+            clearDetail();
+        }
+        if(newText !== text) {
+            setText(newText);
+            urlParams.set('text', newText);
+            clearDetail();
+        }
         window.history.pushState({}, '', `?${urlParams}`);
-        console.log("upUrl");
-        console.log("loading2", loading);
     };
-
+    //определяет тип и по нему выносиить подмассив по выброному типу структупы
     const dataFilter = () => {
-        console.log("dataType", type);
+        let newData = [];
+        let strData;
+        let strLv1, strLv2, strLv3;
         if ( !loading ) {
-            if (type === 'GROUP') {
-                setData(allData?.GROUPS && allData.GROUPS[page]);
-            } else if (type === 'PROFESSOR') {
-                setData(allData?.PROFESSORS);
-            } else if (type === 'AUDITORIUM') {
-                setData(allData?.AUDITORIUMS);
-            } else if (type === 'STRUCTURE') {
-                setData([]);
-                setStructureLv1(getKeysByLevel(allData?.STRUCTURE[page], 1))
-                setStructureLv2(getKeysByLevel(allData?.STRUCTURE[page], 2))
-                setStructureLv3(getKeysByLevel(allData?.STRUCTURE[page], 3))
+            if (type === 'STRUCTURE'){
+                if ( data.length > 0 ){setData(newData)};
+                strData = allData?.STRUCTURE && allData.STRUCTURE[page]
+                strLv1 = getKeysByLevel(strData, 1);
+                strLv2 = getKeysByLevel(strData, 2);
+                strLv3 = getKeysByLevel(strData, 3);
+                setStructureLv1(strLv1);
+                setStructureLv2(strLv2);
+                setStructureLv3(strLv3);
+            }else{
+                if (type === 'GROUP') {
+                    newData = allData?.GROUPS && allData.GROUPS[page];
+                } else if (type === 'PROFESSOR') {
+                    newData = allData?.PROFESSORS;
+                } else if (type === 'AUDITORIUM') {
+                    newData = allData?.AUDITORIUMS;
+                }
+                setData(newData);
             }
-            console.log('dataUse', data)
         }
     }
-
-
-
-
-    const handleSearch = (item) => {
-        updateTextInUrl(item)
-
-    }
-
+    //выполнение отслеживания изменений
     useEffect(() => {
-        detailSearch()
-    }, [text])
-
-
-
+        if (Object.keys(allData).length > 0){
+            updateUrlParams();
+            updateUrlStructure();
+            dataFilter();
+            if(typeof page !== 'undefined' && typeof type !== 'undefined' && typeof text !== 'undefined' && strText !== '') {
+                detailSearch();
+            }
+        }
+    }, [allData, data, page, type, text]);
+    //нажатие на кнопку для отправки детального запроса
+    const handleSearch = (item) => {
+        updateTextInUrl(item);
+    }
+    //отслеживание изменений в инпуте
+    const handleInputChange = (event) => {setFilterText(event.target.value)};
+    //фильтрация по подмассиву
     useEffect(() => {
         if (filterText.length >= 3 && type !== 'STRUCTURE' && data.length > 0) {
             setFilteredMock(data.filter((item) => {
@@ -129,9 +154,8 @@ const Main = () => {
             }));
         }
     }, [filterText])
-
+    //запрос на вывод конкретного расписания
     const detailSearch = async() => {
-        console.log('text', text)
         if (typeof text !== 'undefined' && text !== '') {
             let requestData;
             if (type === 'STRUCTURE') {
@@ -161,24 +185,33 @@ const Main = () => {
                 });
         }
     }
-
-
-
-
-
-
-
+    //вызов детального запроса
+    useEffect(() => {detailSearch()}, [text, strText])
+    //отслеживание состояния загрузки детального запроса
     useEffect(() => {
-        console.log('searching ends');
         if (Object.keys(searchData).length > 0){
+            if(page === 'o') {
+                setChosenWeek('2')
+            } else if(page === 'z') {
+                if(Object.keys(searchData).length < 2) {
+                    setOption(Object.keys(searchData)[0])
+                    const nestedKeys = Object.keys(searchData[option]);
+                    if (nestedKeys.length > 0) {
+                        const firstNestedKey = nestedKeys[0];
+                        setChosenWeek(firstNestedKey);
+                    }
+                } else {
+                    const nestedKeys = Object.keys(searchData[option]);
+                    if (nestedKeys.length > 0) {
+                        const firstNestedKey = nestedKeys[0];
+                        setChosenWeek(firstNestedKey);
+                    }
+                }
+            }
             setFound(true);
-            console.log('searchData', searchData)
-        } else {
-            console.log('found 0')
-            console.log('found', found)
         }
-    }, [searchData]);
-
+    }, [searchData, found, page, option]);
+    //получение ключей с определенного уровня вложенности
     function getKeysByLevel(obj, targetLevel, currentLevel = 1) {
         let keys = [];
         for (let key in obj) {
@@ -189,108 +222,7 @@ const Main = () => {
         }
         return keys;
     }
-
-
-
-    const facultetUpdate = (item) => {
-        setFacultet(item);
-        setStudyYear('');
-        setStudyType('');
-        updateTextInUrl('');
-    }
-
-    useEffect(() => {
-        if(facultet !== '') {
-            const filteredArray = structureLv2.filter(item => item.startsWith(facultet)).map(item => item.split('.')[1]);
-            setLevel2(filteredArray);
-            setLevel3([]);
-            setStudyYear('');
-            setStudyType('');
-        }
-    }, [facultet])
-
-    const studyTypeUpdate = (item) => {
-        setStudyType(item)
-    }
-
-    useEffect(() => {
-        if(facultet !== '' && studyType !== '') {
-            const filteredArray = structureLv3.filter(item => item.startsWith(`${facultet}.${studyType}`)).map(item => item.split('.').pop());
-            setLevel3(filteredArray)
-            setStudyYear('')
-        }
-    }, [studyType])
-
-    const studyYearUpdate = (item) => {
-        setStudyYear(item)
-    }
-
-    useEffect(() => {
-        if(page === 'o') {
-            setChosenWeek((weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? '2' : '3');
-        } else if(page === 'z') {
-            setChosenWeek(weekCounter + 1)
-        }
-    }, [type]);
-
-    const handleInputChange = (event) => {
-        setFilterText(event.target.value);
-        console.log('filterText', filterText)
-    };
-
-
-
-    const updateTextInUrl = (text) => {
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('text', text);
-        setFilterText(text)
-        window.history.pushState({}, '', `?${urlParams}`);
-        updateUrlParams();
-    };
-
-    const updatePageInUrl = (page) => {
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('page', page);
-        urlParams.set('type', 'GROUP');
-        urlParams.set('text', '');
-        setPage(page);
-        setType('GROUP');
-        setFilterText('');
-        window.history.pushState({}, '', `?${urlParams}`);
-    };
-
-    const updateTypeInUrl = (type) => {
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('type', type);
-        urlParams.set('text', '');
-        setType(type);
-        setFilterText('');
-        setFacultet('')
-        setStudyType('')
-        setStudyYear('')
-        window.history.pushState({}, '', `?${urlParams}`);
-    };
-
-    // useEffect(() => {
-    //     setFilteredMock([])
-    //     if (!window.location.search) {
-    //         window.history.replaceState({}, '', '?page=o&type=GROUP&text=');
-    //         updateUrlParams();
-    //     } else {
-    //         updateUrlParams();
-    //     }
-    // }, [loading, page, type, text]);
-
-    // useEffect(() => {
-    //     const handlePopState = () => {
-    //         updateUrlParams();
-    //     };
-    //     window.addEventListener('popstate', handlePopState);
-    //     return () => {
-    //         window.removeEventListener('popstate', handlePopState);
-    //     };
-    // }, [loading]);
-
+    //изменение текста плейсхолдера
     useEffect(() => {
         switch (type) {
             case 'GROUP':
@@ -303,20 +235,141 @@ const Main = () => {
                 setPlaceHolder('ФИО');
                 break;
             default:
-                setPlaceHolder('');
+                setPlaceHolder('Номер группы');
         }
     }, [type]);
-
+    //функции обновления url параметров
+    const updateTextInUrl = (text) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('text', text);
+        urlParams.set('strText', text);
+        setFilterText(text)
+        window.history.pushState({}, '', `?${urlParams}`);
+        updateUrlParams();
+        updateUrlStructure();
+    };
+    const updatePageInUrl = (page) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', page);
+        urlParams.set('type', 'GROUP');
+        urlParams.set('text', '');
+        urlParams.set('facultet', '');
+        urlParams.set('studyType', '');
+        urlParams.set('studyYear', '');
+        window.history.pushState({}, '', `?${urlParams}`);
+        updateUrlParams();
+        updateUrlStructure();
+    };
+    const updateTypeInUrl = (type) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('type', type);
+        urlParams.set('text', '');
+        setFilterText('');
+        window.history.pushState({}, '', `?${urlParams}`);
+        updateUrlParams();
+    };
+    // //работа со структурой
+    // изменение выбранного факультета
+    const facultetUpdate = (item) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('facultet', item);
+        setFacultet(item);
+        urlParams.set('text', '');
+        urlParams.set('strText', '');
+        if(studyYear.length > 0) {
+            setStudyYear('');
+            urlParams.set('studyYear', '');
+        }
+        if(studyType.length > 0) {
+            setStudyType('');
+            urlParams.set('studyType', '');
+        }
+        window.history.pushState({}, '', `?${urlParams}`);
+        updateUrlStructure();
+    }
+    //изменение бакалавр/мага и тд
+    const studyTypeUpdate = (item) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('studyType', item);
+        setStudyType(item);
+        urlParams.set('text', '');
+        urlParams.set('strText', '');
+        if(studyYear.length > 0) {
+            setStudyYear('');
+            urlParams.set('studyYear', '');
+        }
+        window.history.pushState({}, '', `?${urlParams}`);
+        updateUrlStructure();
+    }
+    //изменение выбранного курса в структуре
+    const studyYearUpdate = (item) => {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('studyYear', item);
+        setStudyYear(item);
+        urlParams.set('text', '');
+        urlParams.set('strText', '');
+        window.history.pushState({}, '', `?${urlParams}`);
+        updateUrlStructure();
+    }
+    const updateUrlStructure = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const newFacultet = urlParams.get('facultet') || '';
+        const newStudyType = urlParams.get('studyType') || '';
+        const newStudyYear = urlParams.get('studyYear') || '';
+        const newStrText = urlParams.get('strText') || '';
+        if(newFacultet !== facultet) {
+            setFacultet(newFacultet);
+            urlParams.set('facultet', newFacultet);
+        }
+        if(newStudyType !== studyType) {
+            setStudyType(newStudyType);
+            urlParams.set('studyType', newStudyType);
+            clearDetail();
+        }
+        if(newStudyYear !== studyYear) {
+            setStudyYear(newStudyYear);
+            urlParams.set('studyYear', newStudyYear);
+            clearDetail();
+        }
+        if(newStrText !== strText) {
+            clearDetail();
+            setStrText(newStrText);
+            setText(newStrText);
+            urlParams.set('strText', newStrText);
+            urlParams.set('text', newStrText);
+        }
+        window.history.pushState({}, '', `?${urlParams}`);
+    };
+    useEffect(() => {
+        if(facultet !== '') {
+            const filteredArray = structureLv2.filter(item => item.startsWith(facultet)).map(item => item.split('.')[1]);
+            setLevel2(filteredArray);
+            if(level3.length>0) {
+                const i = []
+                setLevel3(i);
+            }
+        }
+    }, [facultet, structureLv2])
+    useEffect(() => {
+        if(facultet !== '' && studyType !== '') {
+            const filteredArray = structureLv3.filter(item => item.startsWith(`${facultet}.${studyType}`)).map(item => item.split('.').pop());
+            setLevel3(filteredArray)
+            setStudyYear('')
+        }
+    }, [facultet, studyType, structureLv3])
+    useEffect(() => {
+        updateUrlStructure();
+    }, [facultet, studyType, studyYear, strText])
+    //работа с неделями
+    //изменение выбранной недели обучения
     const date = new Date();
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = date.toLocaleDateString("ru-RU", options);
-
     const handleClick = (num) => {
         if (num !== chosenWeek) {
             setChosenWeek(num);
         }
     };
-
     return (
         <div className={styles.root}>
             <div className={styles.navbar}>
@@ -358,8 +411,7 @@ const Main = () => {
                         })}
                         onClick={() => updateTypeInUrl('STRUCTURE')}>Структура</div>
                 </div>
-                {type !== 'STRUCTURE' &&
-                    <div>
+                {type !== 'STRUCTURE' && <div>
                         <form className={styles.formBlock}>
                             <input
                                 className={styles.input}
@@ -384,12 +436,12 @@ const Main = () => {
                                             {item}
                                         </div>
                                     );
-                                })}
+                                })
+                            }
                         </div>
-                    </div>
-                }
+                </div>}
                 <div className={styles.buttonset}>
-                    {type === 'STRUCTURE' && structureLv1.map((item, ind) => {
+                    {type === 'STRUCTURE' && structureLv1.length > 0 && structureLv1.map((item, ind) => {
                         return (
                             <div
                                 className={cn(styles.button, {
@@ -405,7 +457,7 @@ const Main = () => {
                     })}
                 </div>
                 <div className={styles.buttonset}>
-                    {type === 'STRUCTURE' && facultet !== '' && level2 !== []  && level2.map((item, ind) => {
+                    {type === 'STRUCTURE' && facultet !== '' && level2.length > 0  && level2.map((item, ind) => {
                         return (
                             <div
                                 className={cn(styles.button, {
@@ -419,7 +471,7 @@ const Main = () => {
                     })}
                 </div>
                 <div className={styles.buttonset}>
-                    {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && level3 !== []  && level3.map((item, ind) => {
+                    {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && level3.length > 0  && level3.map((item, ind) => {
                         return (
                             <div
                                 className={cn(styles.button, {
@@ -428,7 +480,8 @@ const Main = () => {
                                 key={ind}
                                 onClick={() => {studyYearUpdate(item)}}>
                                 {`${item} курс`}
-                            </div>);})}
+                            </div>);
+                    })}
                 </div>
                 <div className={styles.buttonset}>
                     {type === 'STRUCTURE' && facultet !== '' && studyType !== '' && studyYear !== '' && allData?.STRUCTURE[page][facultet][studyType][studyYear].map((item, ind) => {
@@ -444,25 +497,32 @@ const Main = () => {
                         );
                     })}
                 </div>
-                {found === true  !== '' &&
-                    <div className={styles.options}>
-                        {searchData.r && <div
-                            className={cn(styles.button, {
-                                [styles.activeButton]: option === 'r',
-                            })}
-                            onClick={() => setOption('r')}>
-                            Расписание
-                        </div>}
-                        {searchData.s && <div
-                            className={cn(styles.button, {
-                                [styles.activeButton]: option === 's',
-                            })}
-                            onClick={() => setOption('s')}>
-                            Сессия
-                        </div>}
+                {found === true && typeof text !== 'undefined' && text !== '' && typeof strText !== 'undefined' && strText !== '' &&
+                    <div className={styles.links}>
+                        <div className={styles.options}>
+                            {searchData.r && <div
+                                className={cn(styles.button, {
+                                    [styles.activeButton]: option === 'r',
+                                })}
+                                onClick={() => setOption('r')}>
+                                Расписание
+                            </div>}
+                            {searchData.s && <div
+                                className={cn(styles.button, {
+                                    [styles.activeButton]: option === 's',
+                                })}
+                                onClick={() => setOption('s')}>
+                                Сессия
+                            </div>}
+                        </div>
+                        <div>
+                            <div className={styles.excel}>
+                                <a href={`https://rasp.spbgasu.ru/getExcel.php?TYPE=GROUPS&FIND=${text}`}>Выгрузить в Excel</a>
+                            </div>
+                        </div>
                     </div>
                 }
-                {found === true  !== '' && page === 'o' && option !== 's' &&
+                {found === true && typeof text !== 'undefined' && text !== '' && typeof strText !== 'undefined' && strText !== '' && page === 'o' && option !== 's' &&
                     <div className={styles.weekBlock}>
                         <div className={styles.weekSet}>
                             <div
@@ -481,30 +541,24 @@ const Main = () => {
                             </div>
                         </div>
                         <div className={styles.links}>
-                            <div className={styles.excel}>
-                                <a href={`https://rasp.spbgasu.ru/getExcel.php?TYPE=GROUPS&FIND=${text}`}>Выгрузить в
-                                    Excel</a>
-                            </div>
                             <div className={styles.today}>
-                                Сегодня:<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
+                                Сегодня: {(weekCounter + 1)}<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
                             </div>
                         </div>
                     </div>
-                }
-                {found === true && page === 'o' && text !== '' && option === 'r' && chosenWeek !== null &&
+                } {found === true && Object.keys(searchData).length > 0 && page === 'o' && option === 'r' && chosenWeek !== null &&
                     typeof searchData.r[chosenWeek] === 'object' &&
                     Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
                         const day = searchData.r[chosenWeek][dayKey];
+                        console.log(day, dayKey, ind)
                         return <Day day={day} dayKey={dayKey} key={ind} />;
                     })
-                }
-                {found === true && page === 'o' && text !== '' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
+                } {found === true && Object.keys(searchData).length > 0 && page === 'o' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
                     Object.keys(searchData.s[weekKey]).map((dayKey) => {
                         const day = searchData.s[weekKey][dayKey];
                         return <Day day={day} dayKey={dayKey} key={`${weekKey}-${dayKey}`} />;
                     })
-                ))}
-                {found === true && page === 'z' && text !== '' &&
+                ))} {found === true && page === 'z' && text !== '' && typeof text !== 'undefined' &&
                     <div className={styles.weekBlock}>
                         <div className={styles.weekSet}>
                             {getKeysByLevel(searchData[option], 1).map((item, ind) => {
@@ -516,28 +570,24 @@ const Main = () => {
                             })}
                         </div>
                         <div className={styles.links}>
-                            <div className={styles.excel}>
-                                <a href={`https://rasp.spbgasu.ru/getExcel.php?TYPE=GROUPS&FIND=${text}`}>Выгрузить в Excel</a>
-                            </div>
                             <div className={styles.today}>
-                                Сегодня:<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
+                                Сегодня:  {(weekCounter + 1)}<br /> {formattedDate}<br /> Неделя: {(weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 0 ? <a>знаменатель</a> : <a>числитель</a>}
                             </div>
                         </div>
                     </div>
-                }
-                {found === true && page === 'z' && text !== '' && option === 'r' && chosenWeek !== null &&
+                } {found === true && Object.keys(searchData).length > 0 && page === 'z' && option === 'r' && chosenWeek !== null &&
                     searchData.r[chosenWeek] && typeof searchData.r[chosenWeek] === 'object' &&
                     Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
                         const day = searchData.r[chosenWeek][dayKey];
-                        return <Day day={day} dayKey={dayKey}  key={ind} />;
+                        return <Day day={day} dayKey={dayKey} key={ind} />;
+                    })
+                } {found === true && Object.keys(searchData).length > 0 && page === 'z' && option === 's' && chosenWeek !== null &&
+                    searchData.s[chosenWeek] && typeof searchData.s[chosenWeek] === 'object' &&
+                    Object.keys(searchData.s[chosenWeek]).map((dayKey, ind) => {
+                        const day = searchData.s[chosenWeek][dayKey];
+                        return <Day day={day} dayKey={dayKey} key={ind} />;
                     })
                 }
-                {found === true && page === 'z' && text !== '' && option === 's' && Object.keys(searchData.s).map((weekKey) => (
-                    Object.keys(searchData.s[weekKey]).map((dayKey) => {
-                        const day = searchData.s[weekKey][dayKey];
-                        return <Day day={day} dayKey={dayKey} key={`${weekKey}-${dayKey}`} />;
-                    })
-                ))}
             </div>
         </div>
     );
