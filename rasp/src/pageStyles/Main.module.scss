@@ -1,3 +1,5 @@
+@import '../utils';
+
 .root {
     width: auto-clamp(360, 1920);
 }
@@ -9,7 +11,7 @@
     padding: 25px 15px;
     width: 100%;
     background: #aa3c24;
-    font-size: auto-clamp(20, 25);
+    font-size: auto-clamp(18, 30);
     font-weight: bold;
 }
 
@@ -18,6 +20,7 @@
     color: white;
     text-decoration: none;
     font-size: 20px;
+    cursor: pointer;
 }
 
 .activeLink {
@@ -34,7 +37,6 @@
     padding: auto-clamp(0, 16);
     font-size: auto-clamp(16, 24);
     cursor: pointer;
-    margin-bottom: auto-clamp(0, 20);
 }
 
 .activeType {
@@ -44,15 +46,14 @@
 .typebar {
     padding: 15px 0;
     display: flex;
-    gap: 32px;
-    font-size: 24px;
-    margin-bottom: 20px;
-    margin-top: 15px;
+    font-size: auto-clamp(16, 24);
+    margin-bottom: auto-clamp(0, 20);
+    margin-top: auto-clamp(0, 15);
 }
 
 .formBlock{
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: auto-clamp(0, 20);
 }
 
 .input{
@@ -70,7 +71,7 @@
 }
 
 .buttonset {
-    margin: 0;
+    margin-bottom: auto-clamp(0, 30);
     display: flex;
     gap: 3px;
     flex-wrap: wrap;
@@ -86,9 +87,7 @@
     color: #fff;
     padding: 10px 10px;
     min-width: 120px;
-    margin-top: 15px;
-    margin-right: 3px;
-    margin-bottom: 15px;
+    margin: auto-clamp(0, 3);
     text-align: center;
     border-radius: 30px;
 }
@@ -109,6 +108,7 @@
 
 .weekSet {
     display: flex;
+    flex-wrap: wrap;
     margin-bottom: 30px;
 }
 
@@ -128,6 +128,17 @@
 
 .today {
     text-align: right;
+}
+
+.notFound {
+    margin: auto;
+    text-align: center;
+    font-size: auto-clamp(16, 24);
+    padding-top: auto-clamp(3, 25);
+}
+
+.hidden {
+    display: none;
 }
 
 @media screen and (max-width: 700px) {
