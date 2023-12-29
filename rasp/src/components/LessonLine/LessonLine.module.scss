@@ -9,7 +9,7 @@
 
 .root {
     display: grid;
-    grid-template-columns: 100px 50% 20% 30%;
+    grid-template-columns: 9% 46% 18% 27%;
     width: auto;
     padding-top: 20px;
     padding-bottom: 20px;
@@ -55,7 +55,7 @@
 
 @media screen and (max-width: 700px) {
     .root {
-        grid-template-rows: 40px 100px;
+        grid-template-rows: 60px auto;
         grid-template-columns: 48% 10% 40%;
     }
     .container {

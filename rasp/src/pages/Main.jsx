@@ -101,6 +101,12 @@ const Main = () => {
                             }
                         }
                     }
+                } else {
+                    if((weekCounter + 1 - currentWeekNumber1st + 1) % 2 === 1) {
+                        setChosenWeek('3')
+                    } else {
+                        setChosenWeek('2')
+                    }
                 }
                 setFound(true);
             } else if (page === 'z') {
@@ -110,27 +116,31 @@ const Main = () => {
                         const nestedKeys = Object.keys(searchData.r);
                         if (nestedKeys.length > 0) {
                             const firstNestedKey = nestedKeys[0];
-                            setChosenWeek(firstNestedKey);
+                            setChosenWeek(nestedKeys.includes(weekCounter + 1) ? weekCounter + 1 : firstNestedKey);
                         }
                     } else if (Object.keys(searchData)[0] === 's') {
                         setOption('s')
                         const nestedKeys = Object.keys(searchData.s);
                         if (nestedKeys.length > 0) {
                             const firstNestedKey = nestedKeys[0];
-                            setChosenWeek(firstNestedKey);
-                        } else {
-                            const nestedKeys = Object.keys(searchData[option]);
-                            if (nestedKeys.length > 0) {
-                                const firstNestedKey = nestedKeys[0];
-                                setChosenWeek(firstNestedKey);
-                            }
+                            setChosenWeek(nestedKeys.includes(weekCounter + 1) ? weekCounter + 1 : firstNestedKey);
                         }
+                    }
+                } else {
+                    const nestedKeys = Object.keys(searchData.r);
+                    if (nestedKeys.length > 0) {
+                        const firstNestedKey = nestedKeys[0];
+                        setChosenWeek(nestedKeys.includes(weekCounter + 1) ? weekCounter + 1 : firstNestedKey);
                     }
                 }
                 setFound(true);
             }
         }
     }
+
+    useEffect(() => {
+        check();
+    }, [option])
 
     const updateUrlParams = () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -601,10 +611,12 @@ const Main = () => {
                                 </div>
                         </div>
                     </div>}
-                {found === true && Object.keys(searchData).length > 0 && page === 'o' && option === 'r' && chosenWeek !== null &&
+                {
+                    found === true && Object.keys(searchData).length > 0 && page === 'o' && option === 'r' && chosenWeek !== null &&
                     searchData.r[chosenWeek] && typeof searchData.r[chosenWeek] === 'object' &&
-                    Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
-                        const day = searchData.r[chosenWeek][dayKey];
+                    Array.from({ length: 6 }, (_, ind) => {
+                        const dayKey = String(ind + 1); // Преобразуем индекс в строку, так как в ваших данных ключи представлены строками
+                        const day = searchData.r[chosenWeek][dayKey] || {}; // Если ключ отсутствует, создаем пустой объект
                         return <Day day={day} dayKey={dayKey} option={option} key={ind} />;
                     })
                 }
@@ -629,9 +641,10 @@ const Main = () => {
                 }
                 {found === true && Object.keys(searchData).length > 0 && page === 'z' && option === 'r' && chosenWeek !== null &&
                     searchData.r && searchData.r[chosenWeek] && typeof searchData.r[chosenWeek] === 'object' &&
-                    Object.keys(searchData.r[chosenWeek]).map((dayKey, ind) => {
-                        const day = searchData.r[chosenWeek][dayKey];
-                        return <Day day={day} dayKey={dayKey} option={option} key={ind} />;
+                    Array.from({ length: 6 }, (_, ind) => {
+                        const dayKey = String(ind + 1);
+                        const day = searchData.r[chosenWeek][dayKey] || {};
+                        return <Day day={day} dayKey={dayKey} option={option} key={ind} page={page} />;
                     })
                 }
                 {found === true && Object.keys(searchData).length > 0 && page === 'z' && option === 's' && chosenWeek !== null &&

@@ -2,7 +2,7 @@ import LessonLine from "../LessonLine/LessonLine";
 
 import styles from './Day.module.scss';
 
-const Day = ({ day, dayKey, option }) => {
+const Day = ({ day, dayKey, option, page }) => {
     const daySet = {
         1: 'ПН',
         2: 'ВТ',
@@ -19,6 +19,7 @@ const Day = ({ day, dayKey, option }) => {
             <div className={styles.container}>
                 <div>{result}</div>
                 {option === 's' && <div>{dayDate}</div>}
+                {page === 'z' && option === 'r' && <div>{dayDate}</div>}
             </div>
             <div className={styles.row}>
                 {Object.entries(day).map(([lessonKey, lesson], ind) => (
