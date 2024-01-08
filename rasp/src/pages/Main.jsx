@@ -127,11 +127,19 @@ const Main = () => {
                         }
                     }
                 } else {
-                    const nestedKeys = Object.keys(searchData.r);
-                    if (nestedKeys.length > 0) {
-                        const firstNestedKey = nestedKeys[0];
-                        setChosenWeek(nestedKeys.includes(weekCounter + 1) ? weekCounter + 1 : firstNestedKey);
-                    }
+                    if (option === 'r') {
+                        const nestedKeys = Object.keys(searchData.r);
+                        if (nestedKeys.length > 0) {
+                            const firstNestedKey = nestedKeys[0];
+                            setChosenWeek(nestedKeys.includes(weekCounter + 1) ? weekCounter + 1 : firstNestedKey);
+                        }
+                    } else if (option === 's') {
+                            const nestedKeys = Object.keys(searchData.s);
+                            if (nestedKeys.length > 0) {
+                                const firstNestedKey = nestedKeys[0];
+                                setChosenWeek(nestedKeys.includes(weekCounter + 1) ? weekCounter + 1 : firstNestedKey);
+                            }
+                        }
                 }
                 setFound(true);
             }
